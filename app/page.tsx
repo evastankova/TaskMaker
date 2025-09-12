@@ -1,3 +1,5 @@
+import SupabaseCheck from "@/components/SupabaseCheck";
+
 export default function HomePage() {
   return (
     <main className="min-h-screen p-8 grid place-items-center">
@@ -10,7 +12,8 @@ export default function HomePage() {
         <div className="mt-8 w-40 h-40 bg-blue-500 rounded-lg text-white grid place-items-center">
           Blue
         </div>
-
+        
+        <SupabaseCheck />
       </div>
     </main>
   );
