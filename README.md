@@ -1,10 +1,10 @@
 # TaskMaker
 Task Maker, which manages Users and Admins as role-based access. Admins assign tasks to users, while users can see them and mark them as completed. 
 ## Technologies used:
-- Front- and Backend: Next.js (written on TypeScript)
-- UI: Shadcn, Tailwind CSS
+- Front- and Backend: Next.js + Supabase as BaaS (written on TypeScript)
+- UI: Shadcn UI, Tailwind CSS
 - Database: PostgreSQL (via Supabase)
-- Authentication: Supabase (free project)
+- Authentication: Supabase (client-side authentication --> no cookie server-side sessions and server protection)
 - Global State Management: React Context
 ## Why these:
 - I opted for Next.js, as I wanted to ...
@@ -12,5 +12,9 @@ Task Maker, which manages Users and Admins as role-based access. Admins assign t
 - I opted for PostgreSQL as a database, as I have some experience with SQL databases, and they are the better choice for such a low-scale application with pretty structured and no rapidly changing data. Adiitionally Supabase supports PostgreSQL out-of-the-box.
 - I chose to work with Supabase instead of creating custom sessions because while doing my research, I found out that Supabase is really helpful in other terms as well, e.g. having an integrated PostgreSQL database, and seemed like a technology worth acknowledging and getting the grasp of.
 - Global Staate Management: ...
-- Challenges: ...  
-
+## Challenges:
+- blabla
+## Possible Optimisations (Future):
+- Make the authentication with cookie sessions and server protection
+- Right now, a new user can choose whether they can be a user or an admin. In the future, I can add more real-life relevant functionality, e.g. a regular user can become an admin only when another admin allows it
+- ...
