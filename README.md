@@ -22,5 +22,5 @@ Task Maker, which manages Users and Admins as role-based access. Admins assign t
 1) Clone the github repository
 2) Open a terminal and navigate to the folder where the clone of the project is located
 3) Run ``` npm install ``` --> downloads all dependencies
-4) Run npm run dev and open localhost:3000 in your browser (if the port is already used for something else, you will have to change it)
+4) Run ```npm run dev``` and open localhost:3000 in your browser (if the port is already used for something else, you will have to change it)
 5) Enjoy!
