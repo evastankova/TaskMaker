@@ -17,14 +17,20 @@ type TaskRow = {
   created_by: string | null;
 };
 
+type FilterKey = "all" | number;
+
 export default function DashboardPage() {
   const [uid, setUid] = useState<string | null>(null);
 
   const [statuses, setStatuses] = useState<StatusRow[]>([]);
   const [tasks, setTasks] = useState<TaskRow[]>([]);
+
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [error, setError] = useState("");
+
+  // Filters
+  const [activeFilter, setActiveFilter] = useState<FilterKey>("all");
 
   // status_id -> status name
   const statusMap = useMemo(
@@ -36,6 +42,12 @@ export default function DashboardPage() {
     () => statuses.map((s) => ({ value: s.id, label: s.name })),
     [statuses]
   );
+  // counts per status (for chips)
+  const statusCounts = useMemo(() => {
+    const counts: Record<number, number> = {};
+    for (const t of tasks) counts[t.status_id] = (counts[t.status_id] ?? 0) + 1;
+    return counts;
+  }, [tasks]);
 
   // 1) current user
   useEffect(() => {
@@ -75,6 +87,12 @@ export default function DashboardPage() {
       setLoading(false);
     })();
   }, [uid]);
+
+  // Derived: tasks after filter
+  const filteredTasks = useMemo(() => {
+    if (activeFilter === "all") return tasks;
+    return tasks.filter((t) => t.status_id === activeFilter);
+  }, [tasks, activeFilter]);
 
   async function updateTaskStatus(taskId: string, newStatusId: number) {
     setError("");
@@ -123,15 +141,32 @@ export default function DashboardPage() {
         </p>
       )}
 
+      {/* Filter bar */}
+      <section className="flex flex-wrap items-center gap-2">
+        <FilterChip
+          label={`All (${tasks.length})`}
+          active={activeFilter === "all"}
+          onClick={() => setActiveFilter("all")}
+        />
+        {statuses.map((s) => (
+          <FilterChip
+            key={s.id}
+            label={`${s.name} (${statusCounts[s.id] ?? 0})`}
+            active={activeFilter === s.id}
+            onClick={() => setActiveFilter(s.id)}
+          />
+        ))}
+      </section>
+
       {loading ? (
         <div className="text-sm text-muted-foreground">Loading…</div>
-      ) : tasks.length === 0 ? (
+      ) : filteredTasks.length === 0 ? (
         <div className="rounded-xl border p-6 text-center text-sm text-muted-foreground">
           No tasks for you. Great job! 🎉
         </div>
       ) : (
         <ul className="divide-y rounded-2xl border">
-          {tasks.map((t) => (
+          {filteredTasks.map((t) => (
             <li key={t.id} className="p-4 space-y-2">
               <div className="flex items-start justify-between gap-4">
                 <div>
@@ -182,5 +217,29 @@ export default function DashboardPage() {
         </ul>
       )}
     </main>
+  );
+}
+
+/** Small filter chip button */
+function FilterChip({
+  label,
+  active,
+  onClick,
+}: {
+  label: string;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={[
+        "rounded-full border px-3 py-1 text-sm",
+        active ? "bg-black text-white border-black" : "hover:bg-muted"
+      ].join(" ")}
+    >
+      {label}
+    </button>
   );
 }

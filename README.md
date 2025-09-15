@@ -11,10 +11,16 @@ Task Maker, which manages Users and Admins as role-based access. Admins assign t
 - I wanted to use a component library instead of designing custom UI in order to have clean UI and save time on having to work on each detail by myself.
 - I opted for PostgreSQL as a database, as I have some experience with SQL databases, and they are the better choice for such a low-scale application with pretty structured and no rapidly changing data. Adiitionally Supabase supports PostgreSQL out-of-the-box.
 - I chose to work with Supabase instead of creating custom sessions because while doing my research, I found out that Supabase is really helpful in other terms as well, e.g. having an integrated PostgreSQL database, and seemed like a technology worth acknowledging and getting the grasp of.
-- Global Staate Management: ...
+- Global State Management: ...
 ## Challenges:
 - blabla
 ## Possible Optimisations (Future):
 - Make the authentication with cookie sessions and server protection
 - Right now, a new user can choose whether they can be a user or an admin. In the future, I can add more real-life relevant functionality, e.g. a regular user can become an admin only when another admin allows it
-- ...
+- Host the app (maybe?)
+## How to run it:
+1) Clone the github repository
+2) Open a terminal and navigate to the folder where the clone of the project is located
+3) Run ``` npm install ``` --> downloads all dependencies
+4) Run npm run dev and open localhost:3000 in your browser (if the port is already used for something else, you will have to change it)
+5) Enjoy!
