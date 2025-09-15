@@ -17,10 +17,10 @@ Task Maker, which manages Users and Admins as role-based access. Admins assign t
 ## Possible Optimisations (Future):
 - Make the authentication with cookie sessions and server protection
 - Right now, a new user can choose whether they can be a user or an admin. In the future, I can add more real-life relevant functionality, e.g. a regular user can become an admin only when another admin allows it
-- Host the app (maybe?)
+- Admins can be users on some hierarchical levels as well. I can make functionality that shows admins their assigned tasks as normal users.
 ## How to run it:
 1) Clone the github repository
 2) Open a terminal and navigate to the folder where the clone of the project is located
-3) Run ``` npm install ``` --> downloads all dependencies
+3) Run ```npm install``` --> downloads all dependencies
 4) Run ```npm run dev``` and open localhost:3000 in your browser (if the port is already used for something else, you will have to change it)
 5) Enjoy!
