@@ -9,7 +9,6 @@ export default function LoginPage() {
       <Card className="w-full max-w-sm">
         <CardContent className="p-6 space-y-4">
           <h1 className="text-2xl font-bold">Sign in</h1>
-          <p className="text-sm text-muted-foreground">Use your email and password.</p>
           <SignInForm />
         </CardContent>
       </Card>

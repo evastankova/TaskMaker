@@ -7,12 +7,12 @@ import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import ThemeToggle from "@/components/themeToggle";
 import AppSidebarShell from "@/components/appSidebar";
+import { Textarea } from "@/components/ui/textarea";
 
 // --- Types ---
-type Profile = { id: string; email: string | null };
-type StatusRow = { id: number; name: string }; // your statuses table now uses `name`
+type Profile = { id: string; email: string | null; role_id: number | null };
+type StatusRow = { id: number; name: string };
 type TaskRow = {
   id: string;
   title: string;
@@ -24,12 +24,13 @@ type TaskRow = {
 };
 
 export default function AdminPage() {
-  // current user (for created_by)
   const [uid, setUid] = useState<string | null>(null);
 
   // dropdown data
   const [users, setUsers] = useState<Profile[]>([]);
   const [statuses, setStatuses] = useState<StatusRow[]>([]);
+  const [adminRoleId, setAdminRoleId] = useState<number | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
 
   // tasks
   const [tasks, setTasks] = useState<TaskRow[]>([]);
@@ -40,7 +41,6 @@ export default function AdminPage() {
   // form
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [statusId, setStatusId] = useState<number | undefined>(undefined);
   const [assigneeId, setAssigneeId] = useState<string | undefined>(undefined);
   const [deadlineDate, setDeadlineDate] = useState(""); // "YYYY-MM-DD"
 
@@ -51,7 +51,6 @@ export default function AdminPage() {
 
   const router = useRouter();
 
-  // resolve labels without joins
   const statusMap = useMemo(
     () => Object.fromEntries(statuses.map((s) => [s.id, s.name])),
     [statuses]
@@ -66,8 +65,11 @@ export default function AdminPage() {
     (async () => {
       const { data } = await supabase.auth.getUser();
       setUid(data.user?.id ?? null);
+      setUserEmail(data.user?.email ?? null);
     })();
   }, []);
+
+  const displayName = userEmail ? userEmail.split("@")[0] : "Admin";
 
   // load options + tasks
   useEffect(() => {
@@ -75,7 +77,6 @@ export default function AdminPage() {
       setLoading(true);
       setError("");
 
-      // statuses
       const { data: sts, error: stsErr } = await supabase
         .from("statuses")
         .select("id, name")
@@ -83,16 +84,26 @@ export default function AdminPage() {
       if (stsErr) setError(stsErr.message);
       else setStatuses(sts ?? []);
 
-      // users (profiles)
-      const { data: ppl, error: pplErr } = await supabase.from("profiles").select("id, email");
+      // ⬇️ add this block before the profiles query
+      const { data: adminRole, error: roleErr } = await supabase
+        .from("roles")
+        .select("id")
+        .eq("role", "admin")
+        .single();
+
+      if (!roleErr && adminRole?.id != null) {
+        setAdminRoleId(adminRole.id as number);
+      }
+
+
+      const { data: ppl, error: pplErr } = await supabase.from("profiles").select("id, email, role_id");
       if (pplErr) setError(pplErr.message);
       else setUsers(ppl ?? []);
 
-      // tasks (no joins, just raw ids)
       const { data: tsk, error: tErr } = await supabase
         .from("tasks")
         .select("id, title, description, deadline, created_by, status_id, assignee")
-        .order("created_at", { ascending: false }); // if you don't have created_at, switch to .order("id", { ascending: false })
+        .order("created_at", { ascending: false });
 
       if (tErr) setError(tErr.message);
       else setTasks((tsk ?? []) as TaskRow[]);
@@ -105,7 +116,6 @@ export default function AdminPage() {
     setTitle("");
     setDescription("");
     setDeadlineDate("");
-    setStatusId(undefined);
     setAssigneeId(undefined);
   };
 
@@ -115,8 +125,12 @@ export default function AdminPage() {
       setError("No current user.");
       return;
     }
-    if (!title.trim() || !statusId) {
-      setError("Title and status are required.");
+    if (!title.trim()) {
+      setError("Title is required!");
+      return;
+    }
+    if (!assigneeId) {
+      setError("The task must be assigned!");
       return;
     }
 
@@ -126,10 +140,10 @@ export default function AdminPage() {
     const payload: Partial<TaskRow> = {
       title: title.trim(),
       description: description.trim() || null,
-      status_id: statusId!,
-      assignee: assigneeId || null,
+      status_id: 2, // default
+      assignee: assigneeId,
       created_by: uid,
-      deadline: deadlineDate || null, // date only
+      deadline: deadlineDate || null,
     };
 
     const { data, error: insErr } = await supabase
@@ -160,21 +174,24 @@ export default function AdminPage() {
     }
   };
 
+  // ⬇️ replace the whole userOptions memo
   const userOptions = useMemo(
     () =>
       users
+        .filter((u) => (adminRoleId == null ? true : u.role_id !== adminRoleId)) // hide admins
         .slice()
         .sort((a, b) => (a.email ?? "").localeCompare(b.email ?? ""))
         .map((u) => ({ value: u.id, label: u.email ?? u.id })),
-    [users]
+    [users, adminRoleId]
   );
+
 
   const statusOptions = useMemo(
     () => statuses.map((s) => ({ value: s.id, label: s.name })),
     [statuses]
   );
 
-  // --- Date helpers for date-only strings ("YYYY-MM-DD") ---
+  // date helpers for filters
   const todayString = () => {
     const d = new Date();
     const yyyy = d.getFullYear();
@@ -182,33 +199,18 @@ export default function AdminPage() {
     const dd = String(d.getDate()).padStart(2, "0");
     return `${yyyy}-${mm}-${dd}`;
   };
+  const isOverdue = (dateStr: string | null) => !!dateStr && dateStr < todayString();
+  const isDueToday = (dateStr: string | null) => !!dateStr && dateStr === todayString();
 
-  const isOverdue = (dateStr: string | null) => {
-    if (!dateStr) return false;
-    return dateStr < todayString();
-  };
-
-  const isDueToday = (dateStr: string | null) => {
-    if (!dateStr) return false;
-    return dateStr === todayString();
-  };
-
-  // --- Apply filters (client-side) ---
   const filteredTasks = useMemo(() => {
     return tasks.filter((t) => {
-      // assignee filter
       if (assigneeFilter === "unassigned" && t.assignee) return false;
       if (assigneeFilter !== "all" && assigneeFilter !== "unassigned") {
         if (t.assignee !== assigneeFilter) return false;
       }
-
-      // deadline filter
       if (deadlineFilter === "today" && !isDueToday(t.deadline)) return false;
       if (deadlineFilter === "overdue" && !isOverdue(t.deadline)) return false;
-
-      // status filter
       if (statusFilter !== "all" && t.status_id !== statusFilter) return false;
-
       return true;
     });
   }, [tasks, assigneeFilter, deadlineFilter, statusFilter]);
@@ -219,7 +221,6 @@ export default function AdminPage() {
     setStatusFilter("all");
   };
 
-  // --- Sign out ---
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     router.push("/login");
@@ -227,207 +228,200 @@ export default function AdminPage() {
 
   return (
     <AppSidebarShell>
-    <main className="max-w-5xl mx-auto p-6 space-y-10">
-      <header className="flex items-center justify-between">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-semibold">Admin — Manage Tasks</h1>
-          <p className="text-sm text-muted-foreground">
-            Create tasks, assign to users, delete tasks, and filter what you see.
-          </p>
-        </div>
-        <ThemeToggle />
-        <Button variant="destructive" onClick={handleSignOut}>
-          Sign Out
-        </Button>
-      </header>
-
-      {/* Create form */}
-      <section className="rounded-2xl border p-4 space-y-4">
-        <h2 className="text-lg font-medium">Create a new task</h2>
-
-        <form onSubmit={createTask} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="title">Title *</Label>
-            <Input
-              id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Implement login"
-              required
-            />
+      <main className="max-w-5xl mx-auto p-6 space-y-6">
+        <header className="flex items-center justify-between">
+          <div className="space-y-1">
+            <h1 className="text-3xl font-semibold">Hello {displayName}!</h1>
+            <p className="text-sm text-muted-foreground">
+              Create tasks and assign them to users.
+            </p>
           </div>
+        </header>
 
-          <div className="space-y-2">
-            <Label htmlFor="status">Status *</Label>
-            <select
-              id="status"
-              className="border rounded-md h-10 px-3"
-              value={statusId ?? ""}
-              onChange={(e) => setStatusId(e.target.value ? Number(e.target.value) : undefined)}
-              required
-            >
-              <option value="">Select status</option>
-              {statusOptions.map((s) => (
-                <option key={s.value} value={s.value}>
-                  {s.label}
-                </option>
-              ))}
-            </select>
-          </div>
+        {/* Create form */}
+        <h1 className="text-2xl font-medium">Create a new task:</h1>
+        <section className="rounded-2xl border p-4">
 
-          <div className="space-y-2 md:col-span-2">
-            <Label htmlFor="description">Description</Label>
-            <textarea
-              id="description"
-              className="border rounded-md w-full min-h-[90px] p-3"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Optional details…"
-            />
-          </div>
+          <form onSubmit={createTask} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="title" className="block">Title: *</Label>
+              <Input
+                id="title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Enter a title…"
+                required
+              />
+            </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="assignee">Assign to</Label>
-            <select
-              id="assignee"
-              className="border rounded-md h-10 px-3"
-              value={assigneeId ?? ""}
-              onChange={(e) => setAssigneeId(e.target.value || undefined)}
-            >
-              <option value="">Unassigned</option>
-              {userOptions.map((u) => (
-                <option key={u.value} value={u.value}>
-                  {u.label}
-                </option>
-              ))}
-            </select>
-          </div>
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="description" className="block">Description:</Label>
+              <Textarea
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Enter a description…"
+              />
+            </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="deadline">Deadline (date only)</Label>
-            <Input id="deadline" type="date" value={deadlineDate} onChange={(e) => setDeadlineDate(e.target.value)} />
-          </div>
+            <div className="space-y-2">
+              <Label htmlFor="assignee" className="block">Assign to: *</Label>
+              <select
+                id="assignee"
+                className="mt-1 w-full h-10 px-3 rounded-md bg-white border border-gray-300"
+                value={assigneeId ?? ""}
+                onChange={(e) => setAssigneeId(e.target.value || undefined)}
+              >
+                <option value="">Choose assignee</option>
+                {userOptions.map((u) => (
+                  <option key={u.value} value={u.value}>
+                    {u.label}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-          <div className="md:col-span-2">
-            <Button type="submit" disabled={saving || !uid}>
-              {saving ? "Creating…" : "Create task"}
+            <div className="space-y-2">
+              <Label htmlFor="deadline" className="block">Deadline:</Label>
+              <Input
+                id="deadline"
+                type="date"
+                value={deadlineDate}
+                onChange={(e) => setDeadlineDate(e.target.value)}
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <Button type="submit" disabled={saving || !uid}>
+                {saving ? "Creating…" : "Create task"}
+              </Button>
+            </div>
+          </form>
+
+          {error && <p className="text-sm text-destructive">{error}</p>}
+        </section>
+
+        <h1 className="text-2xl font-medium">All Tasks:</h1>
+
+        {/* Filters */}
+        <section className="rounded-2xl border p-4">
+          <div className="flex items-center justify-between">
+            <h1 className="text-xl font-medium mb-3">Filters</h1>
+            <Button variant="secondary" onClick={clearFilters}>
+              Clear Filters
             </Button>
           </div>
-        </form>
 
-        {error && <p className="text-sm text-destructive">{error}</p>}
-      </section>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Assignee filter */}
+            <div className="space-y-3">
+              <Label htmlFor="f-assignee" className="block">Assignee</Label>
+              <select
+                id="f-assignee"
+                className="rounded-md h-10 px-3 w-full bg-white border border-gray-300"
+                value={assigneeFilter}
+                onChange={(e) => setAssigneeFilter(e.target.value)}
+              >
+                <option value="all">All</option>
+                {userOptions.map((u) => (
+                  <option key={u.value} value={u.value}>
+                    {u.label}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-      {/* Filters */}
-      <section className="rounded-2xl border p-4 space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-medium">Filters</h2>
-          <Button variant="secondary" onClick={clearFilters}>
-            Clear Filters
-          </Button>
-        </div>
+            {/* Deadline filter */}
+            <div className="space-y-3">
+              <Label htmlFor="f-deadline" className="block">Deadline</Label>
+              <select
+                id="f-deadline"
+                className="rounded-md h-10 px-3 w-full bg-white border border-gray-300"
+                value={deadlineFilter}
+                onChange={(e) => setDeadlineFilter(e.target.value as "all" | "today" | "overdue")}
+              >
+                <option value="all">All</option>
+                <option value="today">Due Today</option>
+                <option value="overdue">Overdue</option>
+              </select>
+            </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Assignee filter */}
-          <div className="space-y-1">
-            <Label htmlFor="f-assignee">Assignee</Label>
-            <select
-              id="f-assignee"
-              className="border rounded-md h-10 px-3 w-full"
-              value={assigneeFilter}
-              onChange={(e) => setAssigneeFilter(e.target.value)}
-            >
-              <option value="all">All</option>
-              <option value="unassigned">Unassigned</option>
-              {userOptions.map((u) => (
-                <option key={u.value} value={u.value}>
-                  {u.label}
-                </option>
-              ))}
-            </select>
+            {/* Status filter */}
+            <div className="space-y-3">
+              <Label htmlFor="f-status" className="block">Status</Label>
+              <select
+                id="f-status"
+                className="rounded-md h-10 px-3 w-full bg-white border border-gray-300"
+                value={statusFilter}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setStatusFilter(val === "all" ? "all" : Number(val));
+                }}
+              >
+                <option value="all">All</option>
+                {statusOptions.map((s) => (
+                  <option key={s.value} value={s.value}>
+                    {s.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
+        </section>
 
-          {/* Deadline filter */}
-          <div className="space-y-1">
-            <Label htmlFor="f-deadline">Deadline</Label>
-            <select
-              id="f-deadline"
-              className="border rounded-md h-10 px-3 w-full"
-              value={deadlineFilter}
-              onChange={(e) => setDeadlineFilter(e.target.value as "all" | "today" | "overdue")}
-            >
-              <option value="all">All</option>
-              <option value="today">Due Today</option>
-              <option value="overdue">Overdue</option>
-            </select>
-          </div>
-
-          {/* Status filter */}
-          <div className="space-y-1">
-            <Label htmlFor="f-status">Status</Label>
-            <select
-              id="f-status"
-              className="border rounded-md h-10 px-3 w-full"
-              value={statusFilter}
-              onChange={(e) => {
-                const val = e.target.value;
-                setStatusFilter(val === "all" ? "all" : Number(val));
-              }}
-            >
-              <option value="all">All</option>
-              {statusOptions.map((s) => (
-                <option key={s.value} value={s.value}>
-                  {s.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </section>
-
-      {/* Task list */}
-      <section className="space-y-3">
-        <h2 className="text-lg font-medium">All tasks</h2>
-        {loading ? (
-          <div className="text-sm text-muted-foreground">Loading…</div>
-        ) : filteredTasks.length === 0 ? (
-          <div className="text-sm text-muted-foreground">No tasks match your filters.</div>
-        ) : (
-          <ul className="divide-y rounded-2xl border">
-            {filteredTasks.map((t) => (
-              <li key={t.id} className="p-4 flex items-start justify-between gap-4">
-                <div className="space-y-1">
-                  <div className="font-medium">{t.title}</div>
-                  {t.description && <div className="text-sm text-muted-foreground">{t.description}</div>}
-                  <div className="text-xs text-muted-foreground">
-                    Status: <span className="font-medium">{statusMap[t.status_id] ?? "—"}</span>
-                    {" • "}
-                    Assignee:{" "}
-                    <span className="font-medium">
-                      {t.assignee ? userMap[t.assignee] ?? t.assignee : "Unassigned"}
-                    </span>
-                    {t.deadline ? (
-                      <>
-                        {" • "}Due:{" "}
+        {/* Task list */}
+        <section className="space-y-3">
+          {loading ? (
+            <div className="text-sm text-muted-foreground">Loading…</div>
+          ) : filteredTasks.length === 0 ? (
+            <div className="py-16 text-center text-lg md:text-xl text-muted-foreground">
+              No tasks match your filters.
+            </div>
+          ) : (
+            <ul className="space-y-3">
+              {filteredTasks.map((t) => (
+                <li
+                  key={t.id}
+                  className="rounded-xl border bg-card text-card-foreground shadow-sm p-4 hover:shadow-md transition-shadow"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="space-y-1">
+                      <div className="font-medium">{t.title}</div>
+                      {t.description && (
+                        <div className="text-sm text-muted-foreground">{t.description}</div>
+                      )}
+                      <div className="text-xs text-muted-foreground">
+                        Status: <span className="font-medium">{statusMap[t.status_id] ?? "—"}</span>
+                        {" • "}
+                        Assignee:{" "}
                         <span className="font-medium">
-                          {new Date(t.deadline + "T00:00:00").toLocaleDateString()}
+                          {t.assignee ? userMap[t.assignee] ?? t.assignee : "Unassigned"}
                         </span>
-                      </>
-                    ) : null}
-                  </div>
-                </div>
+                        {t.deadline ? (
+                          <>
+                            {" • "}Due:{" "}
+                            <span className="font-medium">
+                              {new Date(t.deadline + "T00:00:00").toLocaleDateString()}
+                            </span>
+                          </>
+                        ) : null}
+                      </div>
+                    </div>
 
-                <div className="flex items-center gap-2">
-                  <Button variant="destructive" onClick={() => deleteTask(t.id)}>
-                    Delete
-                  </Button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-    </main>
+                    <div className="flex items-center gap-2">
+                      <Button variant="destructive" onClick={() => deleteTask(t.id)}>
+                        Delete
+                      </Button>
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+
+
+          )}
+        </section>
+      </main>
     </AppSidebarShell>
   );
 }

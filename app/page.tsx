@@ -1,17 +1,15 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Link from "next/link";
-import ThemeToggle from "@/components/themeToggle";
 
 export default function HomePage() {
   return (
     <main className="min-h-screen p-8 grid place-items-center">
-      <Card className="w-full max-w-md">
-        <CardContent className="p-6 space-y-4">
+      
+        <CardContent className="p-6 space-y-12">
           
-          <h1 className="text-2xl font-bold">Welcome to TaskMaker</h1>
-          <ThemeToggle />
-          <p className="text-red-600">Please log in or sign up to continue.</p>
+          <h1 className="text-6xl font-bold flex justify-center">Welcome to TaskMaker</h1>
+          <h5 className="text-xl text-gray-600 flex justify-center">Please log in or sign up to continue.</h5>
 
           <div className="flex justify-center gap-4">
             <Link href="/login">
@@ -23,7 +21,7 @@ export default function HomePage() {
             </Link>
           </div>
         </CardContent>
-      </Card>
+      
     </main>
   );
 }

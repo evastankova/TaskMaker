@@ -15,7 +15,8 @@ import {
   SheetClose,
 } from '@/components/ui/sheet';
 
-import { Button } from '@/components/ui/button';
+import SignOutButton from "@/components/auth/SignOutButton";
+import { Button } from "@/components/ui/button"
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Menu, X } from 'lucide-react';
@@ -92,7 +93,7 @@ export default function AppSidebarShell({ children }: { children: React.ReactNod
   return (
     <div className="min-h-screen">
       {/* Header */}
-      <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b bg-background px-3 sm:px-4">
+      <header className="sticky top-0 z-30 flex h-14 items-center gap-2 bg-background px-3 sm:px-4">
         {/* Menu trigger: visible on all breakpoints; hides while sheet is open */}
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild>
@@ -147,9 +148,7 @@ export default function AppSidebarShell({ children }: { children: React.ReactNod
                   <span className="text-sm">Theme</span>
                   <ThemeToggle />
                 </div>
-                <Button variant="destructive" onClick={signOut}>
-                  Sign Out
-                </Button>
+                <SignOutButton />
               </div>
             </div>
           </SheetContent>

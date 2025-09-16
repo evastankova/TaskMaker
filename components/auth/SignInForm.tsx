@@ -18,9 +18,11 @@ export default function SignInForm() {
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, dirtyFields },
   } = useForm<FormData>({
     defaultValues: { email: "", password: "" },
+    mode: "onChange",
+    reValidateMode: "onChange",
   });
 
   const getRoleIdByName = async (name: "user" | "admin") => {
@@ -41,7 +43,9 @@ export default function SignInForm() {
       email,
       password,
     });
+
     setLoading(false);
+
     if (error) {
       setServerError(error.message);
       return;
@@ -73,7 +77,7 @@ export default function SignInForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
       {/* Email */}
       <div className="space-y-2">
         <Label htmlFor="email">Email</Label>
@@ -81,12 +85,13 @@ export default function SignInForm() {
           id="email"
           type="email"
           placeholder="you@example.com"
+          autoComplete="off"
+          spellCheck={false}
           {...register("email", {
             required: "Email is required",
-            pattern: { value: /^\S+@\S+$/i, message: "Enter a valid email" },
           })}
         />
-        {errors.email && (
+        {dirtyFields.email && errors.email && (
           <p className="text-sm text-destructive">{errors.email.message}</p>
         )}
       </div>
@@ -98,33 +103,31 @@ export default function SignInForm() {
           id="password"
           type="password"
           placeholder="Your password"
+          autoComplete="current-password"
+          spellCheck={false}
           {...register("password", {
             required: "Password is required",
           })}
         />
-        {errors.password && (
+        {dirtyFields.password && errors.password && (
           <p className="text-sm text-destructive">{errors.password.message}</p>
         )}
       </div>
 
-      {/* Errors */}
-      {serverError && (
-        <p className="text-sm text-destructive">{serverError}</p>
-      )}
+      {/* Server errors */}
+      {serverError && <p className="text-sm text-destructive">{serverError}</p>}
 
-      {/* Submit */}
       <Button type="submit" disabled={loading} className="w-full">
         {loading ? "Signing in..." : "Sign in"}
       </Button>
 
-      {/* Sign up redirect */}
       <Button
         type="button"
         variant="secondary"
         className="w-full"
         onClick={() => router.push("/signup")}
       >
-        Sign up
+        No account yet? Sign up here
       </Button>
     </form>
   );

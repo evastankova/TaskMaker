@@ -3,8 +3,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import SignOutButton from "@/components/auth/SignOutButton"; 
-import ThemeToggle from "@/components/themeToggle";
 import AppSidebarShell from "@/components/appSidebar";
 
 // --- Types ---
@@ -23,6 +21,7 @@ type FilterKey = "all" | number;
 
 export default function DashboardPage() {
   const [uid, setUid] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
 
   const [statuses, setStatuses] = useState<StatusRow[]>([]);
   const [tasks, setTasks] = useState<TaskRow[]>([]);
@@ -51,11 +50,14 @@ export default function DashboardPage() {
     return counts;
   }, [tasks]);
 
+  const displayName = userEmail ? userEmail.split("@")[0] : "";
+
   // 1) current user
   useEffect(() => {
     (async () => {
       const { data } = await supabase.auth.getUser();
       setUid(data.user?.id ?? null);
+      setUserEmail(data.user?.email ?? null);
     })();
   }, []);
 
@@ -81,7 +83,7 @@ export default function DashboardPage() {
           "id, title, description, deadline, created_by, status_id, assignee"
         )
         .eq("assignee", uid)
-        .order("created_at", { ascending: false }); // if no created_at, use .order("id", { ascending: false })
+        .order("created_at", { ascending: false });
 
       if (tErr) setError(tErr.message);
       else setTasks((tsk ?? []) as TaskRow[]);
@@ -114,8 +116,7 @@ export default function DashboardPage() {
     setSavingId(null);
 
     if (upErr) {
-      // rollback on error
-      setTasks(prev);
+      setTasks(prev); // rollback
       setError(upErr.message);
     }
   }
@@ -132,95 +133,91 @@ export default function DashboardPage() {
 
   return (
     <AppSidebarShell>
-    <main className="max-w-4xl mx-auto p-6 space-y-8">
-      <header className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Your tasks</h1>
-        <ThemeToggle />
-        <SignOutButton />
-      </header>
+      <main className="max-w-4xl mx-auto p-6 space-y-8">
+        <header className="flex items-center justify-between">
+          <h1 className="text-3xl font-semibold">Your tasks, {displayName}</h1>
+        </header>
 
-      {error && (
-        <p className="text-sm text-destructive">
-          {error}
-        </p>
-      )}
+        {error && <p className="text-sm text-destructive">{error}</p>}
 
-      {/* Filter bar */}
-      <section className="flex flex-wrap items-center gap-2">
-        <FilterChip
-          label={`All (${tasks.length})`}
-          active={activeFilter === "all"}
-          onClick={() => setActiveFilter("all")}
-        />
-        {statuses.map((s) => (
+        {/* Filter bar */}
+        <section className="flex flex-wrap items-center gap-2">
           <FilterChip
-            key={s.id}
-            label={`${s.name} (${statusCounts[s.id] ?? 0})`}
-            active={activeFilter === s.id}
-            onClick={() => setActiveFilter(s.id)}
+            label={`All (${tasks.length})`}
+            active={activeFilter === "all"}
+            onClick={() => setActiveFilter("all")}
           />
-        ))}
-      </section>
-
-      {loading ? (
-        <div className="text-sm text-muted-foreground">Loading…</div>
-      ) : filteredTasks.length === 0 ? (
-        <div className="rounded-xl border p-6 text-center text-sm text-muted-foreground">
-          No tasks for you. Great job! 🎉
-        </div>
-      ) : (
-        <ul className="divide-y rounded-2xl border">
-          {filteredTasks.map((t) => (
-            <li key={t.id} className="p-4 space-y-2">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <div className="font-medium">{t.title}</div>
-                  {t.description && (
-                    <div className="text-sm text-muted-foreground mt-1">
-                      {t.description}
-                    </div>
-                  )}
-                </div>
-
-                {/* Status dropdown */}
-                <div className="flex items-center gap-2">
-                  <label className="text-xs text-muted-foreground">Status</label>
-                  <select
-                    className="border rounded-md h-9 px-2"
-                    value={t.status_id}
-                    onChange={(e) => updateTaskStatus(t.id, Number(e.target.value))}
-                    disabled={savingId === t.id}
-                    aria-label="Change status"
-                  >
-                    {statusOptions.map((s) => (
-                      <option key={s.value} value={s.value}>
-                        {s.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="text-xs text-muted-foreground">
-                Current status:{" "}
-                <span className="font-medium">
-                  {statusMap[t.status_id] ?? "—"}
-                </span>
-                {t.deadline ? (
-                  <>
-                    {" • "}
-                    Due:{" "}
-                    <span className="font-medium">
-                      {new Date(t.deadline + "T00:00:00").toLocaleDateString()}
-                    </span>
-                  </>
-                ) : null}
-              </div>
-            </li>
+          {statuses.map((s) => (
+            <FilterChip
+              key={s.id}
+              label={`${s.name} (${statusCounts[s.id] ?? 0})`}
+              active={activeFilter === s.id}
+              onClick={() => setActiveFilter(s.id)}
+            />
           ))}
-        </ul>
-      )}
-    </main>
+        </section>
+
+        {loading ? (
+          <div className="text-sm text-muted-foreground">Loading…</div>
+        ) : filteredTasks.length === 0 ? (
+          <div className="py-16 text-center text-lg md:text-xl text-muted-foreground">
+            No tasks here!
+          </div>
+        ) : (
+          <ul className="space-y-3">
+            {filteredTasks.map((t) => (
+              <li
+                key={t.id}
+                className="rounded-xl border bg-card text-card-foreground shadow-sm p-4 hover:shadow-md transition-shadow"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className="space-y-1">
+                    <div className="font-medium">{t.title}</div>
+                    {t.description && (
+                      <div className="text-sm text-muted-foreground">
+                        {t.description}
+                      </div>
+                    )}
+                    <div className="text-xs text-muted-foreground">
+                      Current status:{" "}
+                      <span className="font-medium">
+                        {statusMap[t.status_id] ?? "—"}
+                      </span>
+                      {t.deadline ? (
+                        <>
+                          {" • "}
+                          Due:{" "}
+                          <span className="font-medium">
+                            {new Date(t.deadline + "T00:00:00").toLocaleDateString()}
+                          </span>
+                        </>
+                      ) : null}
+                    </div>
+                  </div>
+
+                  {/* Status dropdown (styled like in Admin) */}
+                  <div className="flex items-center gap-2">
+                    <label className="text-xs text-muted-foreground">Status</label>
+                    <select
+                      className="rounded-md h-9 px-2 bg-white border border-gray-300"
+                      value={t.status_id}
+                      onChange={(e) => updateTaskStatus(t.id, Number(e.target.value))}
+                      disabled={savingId === t.id}
+                      aria-label="Change status"
+                    >
+                      {statusOptions.map((s) => (
+                        <option key={s.value} value={s.value}>
+                          {s.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </main>
     </AppSidebarShell>
   );
 }
