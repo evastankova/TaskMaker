@@ -7,6 +7,8 @@ import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import ThemeToggle from "@/components/themeToggle";
+import AppSidebarShell from "@/components/appSidebar";
 
 // --- Types ---
 type Profile = { id: string; email: string | null };
@@ -224,6 +226,7 @@ export default function AdminPage() {
   };
 
   return (
+    <AppSidebarShell>
     <main className="max-w-5xl mx-auto p-6 space-y-10">
       <header className="flex items-center justify-between">
         <div className="space-y-1">
@@ -232,6 +235,7 @@ export default function AdminPage() {
             Create tasks, assign to users, delete tasks, and filter what you see.
           </p>
         </div>
+        <ThemeToggle />
         <Button variant="destructive" onClick={handleSignOut}>
           Sign Out
         </Button>
@@ -424,5 +428,6 @@ export default function AdminPage() {
         )}
       </section>
     </main>
+    </AppSidebarShell>
   );
 }

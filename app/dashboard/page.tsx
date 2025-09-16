@@ -3,7 +3,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import SignOutButton from "@/components/auth/SignOutButton"; // remove if you don't have it
+import SignOutButton from "@/components/auth/SignOutButton"; 
+import ThemeToggle from "@/components/themeToggle";
+import AppSidebarShell from "@/components/appSidebar";
 
 // --- Types ---
 type StatusRow = { id: number; name: string };
@@ -129,9 +131,11 @@ export default function DashboardPage() {
   }
 
   return (
+    <AppSidebarShell>
     <main className="max-w-4xl mx-auto p-6 space-y-8">
       <header className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Your tasks</h1>
+        <ThemeToggle />
         <SignOutButton />
       </header>
 
@@ -217,6 +221,7 @@ export default function DashboardPage() {
         </ul>
       )}
     </main>
+    </AppSidebarShell>
   );
 }
 

@@ -18,6 +18,9 @@ Task Maker, which manages Users and Admins as role-based access. Admins assign t
 - Make the authentication with cookie sessions and server protection
 - Right now, a new user can choose whether they can be a user or an admin. In the future, I can add more real-life relevant functionality, e.g. a regular user can become an admin only when another admin allows it
 - Admins can be users on some hierarchical levels as well. I can make functionality that shows admins their assigned tasks as normal users.
+- Make the UI responsive.
+- Add functionality that allows users to ask questions and receive answers for their assigned tasks.
+- Make the date format take European dates (dd/mm/yyyy), not American (mm/dd/yyyy)
 ## How to run it:
 1) Clone the github repository
 2) Open a terminal and navigate to the folder where the clone of the project is located

@@ -9,7 +9,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 type FormData = { email: string; password: string };
-type ProfileWithRole = { roles: { name: "user" | "admin" } };
 
 export default function SignInForm() {
   const router = useRouter();
@@ -25,38 +24,53 @@ export default function SignInForm() {
   });
 
   const getRoleIdByName = async (name: "user" | "admin") => {
-  const { data, error } = await supabase.from("roles").select("id").eq("role", name).single();
-  if (error || !data) throw error ?? new Error("Role not found");
-  return data.id as number;
-};
+    const { data, error } = await supabase
+      .from("roles")
+      .select("id")
+      .eq("role", name)
+      .single();
+    if (error || !data) throw error ?? new Error("Role not found");
+    return data.id as number;
+  };
 
-const onSubmit = async ({ email, password }: FormData) => {
-  setServerError(""); setLoading(true);
+  const onSubmit = async ({ email, password }: FormData) => {
+    setServerError("");
+    setLoading(true);
 
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-  setLoading(false);
-  if (error) { setServerError(error.message); return; }
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    setLoading(false);
+    if (error) {
+      setServerError(error.message);
+      return;
+    }
 
-  const user = data.user;
-  if (!user) { setServerError("No user after login"); return; }
+    const user = data.user;
+    if (!user) {
+      setServerError("No user after login");
+      return;
+    }
 
-  // 1) fetch profile (no join)
-  const { data: prof, error: pErr } = await supabase
-    .from("profiles")
-    .select("role_id")
-    .eq("id", user.id)
-    .single();
-  if (pErr || !prof) { setServerError(pErr?.message ?? "Profile not found"); return; }
+    const { data: prof, error: pErr } = await supabase
+      .from("profiles")
+      .select("role_id")
+      .eq("id", user.id)
+      .single();
+    if (pErr || !prof) {
+      setServerError(pErr?.message ?? "Profile not found");
+      return;
+    }
 
-  // 2) fetch admin role id, compare
-  try {
-    const adminId = await getRoleIdByName("admin");
-    if (prof.role_id === adminId) router.replace("/admin");
-    else router.replace("/dashboard");
-  } catch (e: any) {
-    setServerError(e?.message ?? "Failed to resolve role");
-  }
-};
+    try {
+      const adminId = await getRoleIdByName("admin");
+      if (prof.role_id === adminId) router.replace("/admin");
+      else router.replace("/dashboard");
+    } catch (e: any) {
+      setServerError(e?.message ?? "Failed to resolve role");
+    }
+  };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -99,8 +113,18 @@ const onSubmit = async ({ email, password }: FormData) => {
       )}
 
       {/* Submit */}
-      <Button type="submit" disabled={loading}>
+      <Button type="submit" disabled={loading} className="w-full">
         {loading ? "Signing in..." : "Sign in"}
+      </Button>
+
+      {/* Sign up redirect */}
+      <Button
+        type="button"
+        variant="secondary"
+        className="w-full"
+        onClick={() => router.push("/signup")}
+      >
+        Sign up
       </Button>
     </form>
   );

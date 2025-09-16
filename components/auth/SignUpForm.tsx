@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +11,7 @@ import { Label } from "@/components/ui/label";
 type FormData = { email: string; password: string; role: "user" | "admin" };
 
 export default function SignUpForm() {
+  const router = useRouter();
   const [serverError, setServerError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -130,8 +132,18 @@ export default function SignUpForm() {
       )}
 
       {/* Submit */}
-      <Button type="submit" disabled={loading}>
+      <Button type="submit" disabled={loading} className="w-full">
         {loading ? "Creating..." : "Create account"}
+      </Button>
+
+      {/* Log in redirect */}
+      <Button
+        type="button"
+        variant="secondary"
+        className="w-full"
+        onClick={() => router.push("/login")}
+      >
+        Log in
       </Button>
     </form>
   );
