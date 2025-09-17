@@ -11,9 +11,6 @@ Task Maker, which manages Users and Admins as role-based access. Admins assign t
 - I wanted to use a component library instead of designing custom UI in order to have clean UI and save time on having to work on each detail by myself.
 - I opted for PostgreSQL as a database, as I have some experience with SQL databases, and they are the better choice for such a low-scale application with pretty structured and no rapidly changing data. Adiitionally Supabase supports PostgreSQL out-of-the-box.
 - I chose to work with Supabase instead of creating custom sessions because while doing my research, I found out that Supabase is really helpful in other terms as well, e.g. having an integrated PostgreSQL database, and seemed like a technology worth acknowledging and getting the grasp of.
-- Global State Management: ...
-## Challenges:
-- blabla
 ## Possible Optimisations (Future):
 - Make the authentication with cookie sessions and server protection.
 - Right now, a new user can choose whether they can be a user or an admin. In the future, I can add more real-life relevant functionality, e.g. a regular user can become an admin only when another admin allows it.
@@ -22,6 +19,7 @@ Task Maker, which manages Users and Admins as role-based access. Admins assign t
 - Add functionality that allows users to ask questions and receive answers for their assigned tasks.
 - Make the date format take European dates (dd/mm/yyyy), not American (mm/dd/yyyy)
 - Right now some dark mode functionality is added, but it does not function properly. I can adjust it to work as it should. 
+- Add functionality to delete user accounts.
 ## How to run it:
 1) Clone the github repository
 2) Open a terminal and navigate to the folder where the clone of the project is located
