@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import AppSidebarShell from "@/components/appSidebar";
 import { Textarea } from "@/components/ui/textarea";
+import BackgroundWrapper from "@/components/backgroundWrapper";
 
 // --- Types ---
 type Profile = { id: string; email: string | null; role_id: number | null };
@@ -227,24 +228,25 @@ export default function AdminPage() {
   };
 
   return (
+    <BackgroundWrapper image="/coffee_laptop.jpg">
     <AppSidebarShell>
-      <main className="max-w-5xl mx-auto p-6 space-y-6">
+      <main className="max-w-5xl mx-auto p-6 space-y-6 min-h-dvh">
         <header className="flex items-center justify-between">
           <div className="space-y-1">
-            <h1 className="text-3xl font-semibold">Hello {displayName}!</h1>
-            <p className="text-sm text-muted-foreground">
+            <h1 className="text-4xl font-semibold text-white">Hello {displayName}!</h1>
+            <p className="text-sm text-muted-foreground text-white">
               Create tasks and assign them to users.
             </p>
           </div>
         </header>
 
         {/* Create form */}
-        <h1 className="text-2xl font-medium">Create a new task:</h1>
+        <h1 className="text-3xl font-medium text-white">Create a new task:</h1>
         <section className="rounded-2xl border p-4">
 
           <form onSubmit={createTask} className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="title" className="block">Title: *</Label>
+              <Label htmlFor="title" className="block text-white">Title: *</Label>
               <Input
                 id="title"
                 value={title}
@@ -255,7 +257,7 @@ export default function AdminPage() {
             </div>
 
             <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="description" className="block">Description:</Label>
+              <Label htmlFor="description" className="block text-white">Description:</Label>
               <Textarea
                 id="description"
                 value={description}
@@ -265,7 +267,7 @@ export default function AdminPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="assignee" className="block">Assign to: *</Label>
+              <Label htmlFor="assignee" className="block text-white">Assign to: *</Label>
               <select
                 id="assignee"
                 className="mt-1 w-full h-10 px-3 rounded-md bg-white border border-gray-300"
@@ -282,7 +284,7 @@ export default function AdminPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="deadline" className="block">Deadline:</Label>
+              <Label htmlFor="deadline" className="block text-white">Deadline:</Label>
               <Input
                 id="deadline"
                 type="date"
@@ -292,21 +294,21 @@ export default function AdminPage() {
             </div>
 
             <div className="md:col-span-2">
-              <Button type="submit" disabled={saving || !uid}>
+              <Button type="submit" disabled={saving || !uid} variant="outlineWhite">
                 {saving ? "Creating…" : "Create task"}
               </Button>
             </div>
           </form>
 
-          {error && <p className="text-sm text-destructive">{error}</p>}
+          {error && <p className="text-lg text-destructive">{error}</p>}
         </section>
 
-        <h1 className="text-2xl font-medium">All Tasks:</h1>
+        <h1 className="text-3xl font-medium text-white">All Tasks:</h1>
 
         {/* Filters */}
         <section className="rounded-2xl border p-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-xl font-medium mb-3">Filters</h1>
+            <h1 className="text-2xl font-medium mb-3 text-white">Filters</h1>
             <Button variant="secondary" onClick={clearFilters}>
               Clear Filters
             </Button>
@@ -315,7 +317,7 @@ export default function AdminPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Assignee filter */}
             <div className="space-y-3">
-              <Label htmlFor="f-assignee" className="block">Assignee</Label>
+              <Label htmlFor="f-assignee" className="block text-white">Assignee</Label>
               <select
                 id="f-assignee"
                 className="rounded-md h-10 px-3 w-full bg-white border border-gray-300"
@@ -333,7 +335,7 @@ export default function AdminPage() {
 
             {/* Deadline filter */}
             <div className="space-y-3">
-              <Label htmlFor="f-deadline" className="block">Deadline</Label>
+              <Label htmlFor="f-deadline" className="block text-white">Deadline</Label>
               <select
                 id="f-deadline"
                 className="rounded-md h-10 px-3 w-full bg-white border border-gray-300"
@@ -348,7 +350,7 @@ export default function AdminPage() {
 
             {/* Status filter */}
             <div className="space-y-3">
-              <Label htmlFor="f-status" className="block">Status</Label>
+              <Label htmlFor="f-status" className="block text-white">Status</Label>
               <select
                 id="f-status"
                 className="rounded-md h-10 px-3 w-full bg-white border border-gray-300"
@@ -374,7 +376,7 @@ export default function AdminPage() {
           {loading ? (
             <div className="text-sm text-muted-foreground">Loading…</div>
           ) : filteredTasks.length === 0 ? (
-            <div className="py-16 text-center text-lg md:text-xl text-muted-foreground">
+            <div className="py-16 text-center text-lg md:text-xl text-muted-foreground text-white">
               No tasks match your filters.
             </div>
           ) : (
@@ -423,5 +425,6 @@ export default function AdminPage() {
         </section>
       </main>
     </AppSidebarShell>
+    </BackgroundWrapper>
   );
 }

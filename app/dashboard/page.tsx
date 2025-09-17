@@ -4,6 +4,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import AppSidebarShell from "@/components/appSidebar";
+import BackgroundWrapper from "@/components/backgroundWrapper";
 
 // --- Types ---
 type StatusRow = { id: number; name: string };
@@ -132,16 +133,17 @@ export default function DashboardPage() {
   }
 
   return (
+    <BackgroundWrapper image="/coffee_book.jpg">
     <AppSidebarShell>
       <main className="max-w-4xl mx-auto p-6 space-y-8">
         <header className="flex items-center justify-between">
-          <h1 className="text-3xl font-semibold">Your tasks, {displayName}</h1>
+          <h1 className="text-4xl font-semibold text-white">Your tasks, {displayName}</h1>
         </header>
 
         {error && <p className="text-sm text-destructive">{error}</p>}
 
         {/* Filter bar */}
-        <section className="flex flex-wrap items-center gap-2">
+        <section className="flex flex-wrap items-center gap-4 text-white">
           <FilterChip
             label={`All (${tasks.length})`}
             active={activeFilter === "all"}
@@ -160,7 +162,7 @@ export default function DashboardPage() {
         {loading ? (
           <div className="text-sm text-muted-foreground">Loading…</div>
         ) : filteredTasks.length === 0 ? (
-          <div className="py-16 text-center text-lg md:text-xl text-muted-foreground">
+          <div className="py-16 text-center text-lg md:text-xl text-muted-foreground text-white">
             No tasks here!
           </div>
         ) : (
@@ -219,6 +221,7 @@ export default function DashboardPage() {
         )}
       </main>
     </AppSidebarShell>
+    </BackgroundWrapper>
   );
 }
 
@@ -237,8 +240,8 @@ function FilterChip({
       type="button"
       onClick={onClick}
       className={[
-        "rounded-full border px-3 py-1 text-sm",
-        active ? "bg-black text-white border-black" : "hover:bg-muted"
+        "rounded-full border px-5 py-2 text-sm",
+        active ? "bg-black text-white border-black" : "hover:bg-white hover:text-black hover:border-white"
       ].join(" ")}
     >
       {label}

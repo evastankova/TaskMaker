@@ -80,7 +80,7 @@ export default function SignInForm() {
     <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
       {/* Email */}
       <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="email" className="text-white">Email</Label>
         <Input
           id="email"
           type="email"
@@ -92,13 +92,13 @@ export default function SignInForm() {
           })}
         />
         {dirtyFields.email && errors.email && (
-          <p className="text-sm text-destructive">{errors.email.message}</p>
+          <p className="text-lg text-destructive">{errors.email.message}</p>
         )}
       </div>
 
       {/* Password */}
       <div className="space-y-2">
-        <Label htmlFor="password">Password</Label>
+        <Label htmlFor="password" className="text-white">Password</Label>
         <Input
           id="password"
           type="password"
@@ -110,20 +110,20 @@ export default function SignInForm() {
           })}
         />
         {dirtyFields.password && errors.password && (
-          <p className="text-sm text-destructive">{errors.password.message}</p>
+          <p className="text-lg text-destructive">{errors.password.message}</p>
         )}
       </div>
 
       {/* Server errors */}
-      {serverError && <p className="text-sm text-destructive">{serverError}</p>}
+      {serverError && <p className="text-lg text-destructive">{serverError}</p>}
 
-      <Button type="submit" disabled={loading} className="w-full">
-        {loading ? "Signing in..." : "Sign in"}
+      <Button type="submit" disabled={loading} className="w-full" variant="outlineWhite">
+        {loading ? "Logging in..." : "Log in"}
       </Button>
 
       <Button
         type="button"
-        variant="secondary"
+        variant="outline"
         className="w-full"
         onClick={() => router.push("/signup")}
       >

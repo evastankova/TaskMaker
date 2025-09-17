@@ -93,17 +93,16 @@ export default function AppSidebarShell({ children }: { children: React.ReactNod
   return (
     <div className="min-h-screen">
       {/* Header */}
-      <header className="sticky top-0 z-30 flex h-14 items-center gap-2 bg-background px-3 sm:px-4">
+      <header className="sticky top-0 z-30 flex h-14 items-center gap-2 bg-transparent px-3 sm:px-4">
         {/* Menu trigger: visible on all breakpoints; hides while sheet is open */}
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild>
             <Button
               variant="ghost"
-              size="icon"
               aria-label="Open menu"
-              className={open ? 'hidden' : ''}
+              className={`h-12 w-12 rounded-md bg-transparent hover:bg-black transition-colors [&_svg]:h-8 [&_svg]:w-8 ${open ? 'hidden' : ''}`}
             >
-              <Menu className="h-5 w-5" />
+              <Menu className=" text-white" />
             </Button>
           </SheetTrigger>
 

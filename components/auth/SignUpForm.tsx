@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import BackgroundWrapper from "../backgroundWrapper";
 
 type FormData = { email: string; password: string; role: "user" | "admin" };
 
@@ -97,7 +98,7 @@ export default function SignUpForm() {
 
       {/* Email */}
       <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="email" className="text-white">Email</Label>
         <Input
           id="email"
           type="email"
@@ -117,13 +118,13 @@ export default function SignUpForm() {
         />
         {/* Show email error only after field is edited; disappears immediately when valid */}
         {dirtyFields.email && errors.email && (
-          <p className="text-sm text-destructive">{errors.email.message}</p>
+          <p className="text-lg text-destructive">{errors.email.message}</p>
         )}
       </div>
 
       {/* Password */}
       <div className="space-y-2">
-        <Label htmlFor="password">Password</Label>
+        <Label htmlFor="password" className="text-white">Password</Label>
         <Input
           id="password"
           type="password"
@@ -138,28 +139,28 @@ export default function SignUpForm() {
         />
         {/* Show password error only after field is edited; disappears as soon as length >= 6 */}
         {dirtyFields.password && errors.password && (
-          <p className="text-sm text-destructive">{errors.password.message}</p>
+          <p className="text-lg text-destructive">{errors.password.message}</p>
         )}
       </div>
 
       {/* Role */}
       <div className="space-y-2">
-        <Label>Role</Label>
+        <Label className="text-white">Role</Label>
         <div className="flex items-center gap-4">
           <label className="flex items-center gap-2">
             <input type="radio" value="user" {...register("role")} defaultChecked />
-            <span>User</span>
+            <span className="text-white">User</span>
           </label>
           <label className="flex items-center gap-2">
             <input type="radio" value="admin" {...register("role")} />
-            <span>Admin</span>
+            <span className="text-white">Admin</span>
           </label>
         </div>
       </div>
 
-      {serverError && <p className="text-sm text-destructive">{serverError}</p>}
+      {serverError && <p className="text-lg text-destructive">{serverError}</p>}
 
-      <Button type="submit" disabled={loading} className="w-full">
+      <Button type="submit" disabled={loading} className="w-full" variant="outlineWhite">
         {loading ? "Creating..." : "Create account"}
       </Button>
 
